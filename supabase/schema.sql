@@ -29,7 +29,8 @@ create table if not exists turmas (
   data_inicio  date not null,
   status       text not null default 'em_andamento'
                 check (status in ('em_andamento','iniciada','concluida','cancelada')),
-  criado_em    timestamptz not null default now()
+  criado_em    timestamptz not null default now(),
+  unique (consultor_id, cidade, numero)
 );
 
 create index if not exists idx_turmas_consultor on turmas(consultor_id);

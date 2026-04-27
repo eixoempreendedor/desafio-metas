@@ -35,7 +35,16 @@ export async function criarTurma(token: string, formData: FormData) {
     meta,
     data_inicio,
   });
-  if (error) return { ok: false, erro: error.message };
+  if (error) {
+    // Postgres unique_violation = '23505'
+    if (error.code === '23505') {
+      return {
+        ok: false,
+        erro: `Você já tem uma turma cadastrada para ${cidade} T${numero}.`,
+      };
+    }
+    return { ok: false, erro: error.message };
+  }
 
   revalidatePath(`/c/${token}`);
   revalidatePath('/');
