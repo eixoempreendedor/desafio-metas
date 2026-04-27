@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
-import { formatDateBR } from '@/lib/week';
+import { formatDateBR, pctAnoCorrido } from '@/lib/week';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ type TurmaRow = {
   numero: number;
   meta: number;
   data_inicio: string;
-  status: 'em_andamento' | 'concluida' | 'cancelada';
+  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   consultor_id: string;
   consultores: { nome: string } | { nome: string }[] | null;
   updates_semanais: { matriculados: number; criado_em: string }[];
@@ -97,9 +97,6 @@ export default async function Home() {
   const ativas = linhasTurma
     .filter((l) => l.status === 'em_andamento')
     .sort((a, b) => b.pct - a.pct);
-  const totalMatriculados = ativas.reduce((s, l) => s + l.matriculados, 0);
-  const totalMeta = ativas.reduce((s, l) => s + l.meta, 0);
-  const pctTotal = totalMeta > 0 ? (totalMatriculados / totalMeta) * 100 : 0;
 
   // ─── Por consultor (anual) ─────────────────────────────────────
   const linhasAno = (consultoresData ?? [])
@@ -141,27 +138,15 @@ export default async function Home() {
           📊 Desafio Empreendedor
         </h1>
         <p className="text-zinc-600 text-sm mt-1">
-          Painel de monitoramento das turmas
+          Painel de monitoramento das turmas · {pctAnoCorrido().toFixed(0)}% do
+          ano {ano} corrido
         </p>
       </header>
 
-      <section className="grid grid-cols-3 gap-3 mb-6">
-        <Card label="Turmas ativas" value={String(ativas.length)} />
-        <Card
-          label="Empresas / Meta"
-          value={`${totalMatriculados}/${totalMeta}`}
-        />
-        <Card
-          label="% Atingido"
-          value={`${pctTotal.toFixed(0)}%`}
-          highlight={pctTotal >= 80 ? 'green' : pctTotal >= 50 ? 'amber' : 'red'}
-        />
-      </section>
-
-      {/* ─── Monitoramento de Metas (turmas ativas) ─── */}
+      {/* ─── Turmas em Formação Comercial ─── */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3">
-          🎯 Monitoramento de Metas — Turmas
+          🎯 Turmas em Formação Comercial
         </h2>
         {ativas.length === 0 ? (
           <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
@@ -206,9 +191,12 @@ export default async function Home() {
 
       {/* ─── Meta Anual por Consultor ─── */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3">
+        <h2 className="text-lg font-semibold mb-1">
           🎯 Meta Anual por Consultor ({ano})
         </h2>
+        <p className="text-xs text-zinc-500 mb-3 italic">
+          {pctAnoCorrido().toFixed(0)}% do ano corrido — para referência
+        </p>
         {linhasAno.length === 0 ? (
           <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
             Nenhum consultor definiu meta anual ainda.
@@ -283,33 +271,6 @@ export default async function Home() {
         )}
       </section>
     </main>
-  );
-}
-
-function Card({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: 'green' | 'amber' | 'red';
-}) {
-  const color =
-    highlight === 'green'
-      ? 'text-green-600'
-      : highlight === 'amber'
-        ? 'text-amber-600'
-        : highlight === 'red'
-          ? 'text-red-600'
-          : 'text-zinc-900';
-  return (
-    <div className="bg-white border border-zinc-200 rounded-lg p-4">
-      <div className="text-xs text-zinc-500 uppercase tracking-wide">
-        {label}
-      </div>
-      <div className={`text-2xl font-bold mt-1 ${color}`}>{value}</div>
-    </div>
   );
 }
 

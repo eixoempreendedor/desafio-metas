@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase';
-import { isoWeek, formatDateBR } from './week';
+import { isoWeek, formatDateBR, pctAnoCorrido } from './week';
 
 type LinhaTurma = {
   consultor: string;
@@ -92,13 +92,12 @@ export async function gerarRelatorioSemanal(
     };
   });
 
-  // ─── Turmas em andamento (ranking por %) ────────────────────────
+  // ─── Turmas em formação comercial (ranking por %) ───────────────
   const ativas = linhas
     .filter((l) => l.status === 'em_andamento')
     .sort((a, b) => b.pct - a.pct);
   const totalMatriculados = ativas.reduce((s, l) => s + l.matriculados, 0);
   const totalMeta = ativas.reduce((s, l) => s + l.meta, 0);
-  const pctTotal = totalMeta > 0 ? (totalMatriculados / totalMeta) * 100 : 0;
 
   // ─── Meta anual por consultor ───────────────────────────────────
   type ConsultorRow = { id: string; nome: string; meta_anual: number | null };
@@ -166,15 +165,15 @@ export async function gerarRelatorioSemanal(
           )
           .join('\n');
 
+  const pctAno = pctAnoCorrido();
+
   const mensagem = [
     `📊 *DESAFIO EMPREENDEDOR — ${semana}*`,
     '',
-    '*🎯 Monitoramento de Metas — Turmas*',
+    '*🎯 Turmas em Formação Comercial*',
     blocoTurmas,
     '',
-    `📈 *Total turmas ativas:* ${totalMatriculados}/${totalMeta} empresas (${pctTotal.toFixed(0)}%)`,
-    '',
-    `*🎯 Meta Anual por Consultor (${ano})*`,
+    `*🎯 Meta Anual por Consultor (${ano})* · _${pctAno.toFixed(0)}% do ano corrido_`,
     blocoAnual,
     '',
     '*📅 Próximas Turmas (60 dias)*',

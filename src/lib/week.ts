@@ -25,3 +25,11 @@ export function formatDateBR(iso: string): string {
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
+
+/** % do ano corrido (0-100) na data informada. */
+export function pctAnoCorrido(d: Date = new Date()): number {
+  const y = d.getUTCFullYear();
+  const start = Date.UTC(y, 0, 1);
+  const end = Date.UTC(y + 1, 0, 1);
+  return ((d.getTime() - start) / (end - start)) * 100;
+}
