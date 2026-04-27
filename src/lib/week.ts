@@ -1,0 +1,27 @@
+/**
+ * Semana ISO 8601 no formato 'YYYY-Www' — ex: '2026-W17'.
+ * Segunda = início da semana, domingo = fim.
+ */
+export function isoWeek(d: Date = new Date()): string {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil(
+    ((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
+  );
+  return `${date.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+/** Retorna a semana ISO da semana ANTERIOR à data informada. */
+export function isoWeekPrev(d: Date = new Date()): string {
+  const prev = new Date(d);
+  prev.setUTCDate(prev.getUTCDate() - 7);
+  return isoWeek(prev);
+}
+
+/** Formata data BR a partir de ISO 'YYYY-MM-DD'. */
+export function formatDateBR(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
