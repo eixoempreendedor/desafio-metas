@@ -5,6 +5,7 @@ import {
   criarTurma,
   atualizarMatriculados,
   alterarStatusTurma,
+  atualizarMetaAnual,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ type TurmaDB = {
   numero: number;
   meta: number;
   data_inicio: string;
-  status: 'em_andamento' | 'concluida' | 'cancelada';
+  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   updates_semanais: {
     matriculados: number;
     ano_semana: string;
@@ -31,7 +32,7 @@ export default async function ConsultorPage({ params }: Props) {
 
   const { data: consultor } = await sb
     .from('consultores')
-    .select('id, nome, ativo')
+    .select('id, nome, ativo, meta_anual')
     .eq('token', token)
     .single();
 
@@ -66,6 +67,25 @@ export default async function ConsultorPage({ params }: Props) {
     'use server';
     await atualizarMatriculados(token, formData);
   }
+  async function salvarMetaAnual(formData: FormData) {
+    'use server';
+    await atualizarMetaAnual(token, formData);
+  }
+
+  // Empresas do consultor neste ano (soma do último update de cada turma de 2026)
+  const ano = new Date().getUTCFullYear();
+  const turmasNoAno = (turmas ?? []).filter(
+    (t) => t.data_inicio.startsWith(String(ano)) && t.status !== 'cancelada',
+  );
+  const empresasNoAno = turmasNoAno.reduce((s, t) => {
+    const ultimo = [...t.updates_semanais].sort((a, b) =>
+      b.criado_em.localeCompare(a.criado_em),
+    )[0];
+    return s + (ultimo?.matriculados ?? 0);
+  }, 0);
+  const metaAnual = consultor.meta_anual;
+  const pctAnual =
+    metaAnual && metaAnual > 0 ? (empresasNoAno / metaAnual) * 100 : null;
 
   return (
     <main className="max-w-3xl mx-auto p-4 sm:p-6">
@@ -77,13 +97,62 @@ export default async function ConsultorPage({ params }: Props) {
         </p>
       </header>
 
+      {/* ─── Meta anual ─── */}
+      <section className="bg-white border border-zinc-200 rounded-lg p-4 mb-6">
+        <h2 className="font-semibold mb-3">🎯 Meta anual ({ano})</h2>
+        <form
+          action={salvarMetaAnual}
+          className="flex flex-wrap items-end gap-3"
+        >
+          <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs text-zinc-500 mb-1">
+              Meta de empresas no ano
+            </label>
+            <input
+              name="meta_anual"
+              type="number"
+              min={0}
+              defaultValue={metaAnual ?? ''}
+              placeholder="Ex: 100"
+              className="w-full border border-zinc-300 rounded px-3 py-2"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-zinc-900 text-white rounded-lg px-4 py-2 font-semibold hover:bg-zinc-700 transition"
+          >
+            Salvar meta
+          </button>
+          <div className="w-full sm:w-auto sm:ml-auto text-right">
+            <div className="text-xs text-zinc-500">No ano</div>
+            <div className="font-mono text-lg font-semibold">
+              {empresasNoAno}
+              {metaAnual ? `/${metaAnual}` : ''} empresas
+            </div>
+            {pctAnual !== null && (
+              <div
+                className={`text-sm font-semibold ${
+                  pctAnual >= 80
+                    ? 'text-green-600'
+                    : pctAnual >= 50
+                      ? 'text-amber-600'
+                      : 'text-red-600'
+                }`}
+              >
+                {pctAnual.toFixed(0)}%
+              </div>
+            )}
+          </div>
+        </form>
+      </section>
+
       {/* ─── Nova turma ─── */}
       <section className="bg-white border border-zinc-200 rounded-lg p-4 mb-6">
         <h2 className="font-semibold mb-3">➕ Nova turma</h2>
         <form action={criar} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Field label="Cidade" name="cidade" required className="col-span-2" />
           <Field label="Nº turma" name="numero" type="number" min={1} required />
-          <Field label="Meta" name="meta" type="number" min={1} required />
+          <Field label="Meta (empresas)" name="meta" type="number" min={1} required />
           <Field
             label="Data início"
             name="data_inicio"
@@ -121,9 +190,11 @@ export default async function ConsultorPage({ params }: Props) {
               const statusBadge =
                 t.status === 'em_andamento'
                   ? null
-                  : t.status === 'concluida'
-                    ? '✅ concluída'
-                    : '❌ cancelada';
+                  : t.status === 'iniciada'
+                    ? '🚀 iniciada (travada)'
+                    : t.status === 'concluida'
+                      ? '✅ concluída'
+                      : '❌ cancelada';
               return (
                 <li
                   key={t.id}
@@ -162,7 +233,7 @@ export default async function ConsultorPage({ params }: Props) {
                         <input type="hidden" name="turma_id" value={t.id} />
                         <div className="flex-1 min-w-[120px]">
                           <label className="block text-xs text-zinc-500 mb-1">
-                            Matriculados (semana atual)
+                            Contratos Totais
                           </label>
                           <input
                             name="matriculados"
@@ -191,29 +262,55 @@ export default async function ConsultorPage({ params }: Props) {
                           Salvar
                         </button>
                       </form>
-                      <div className="flex gap-3 mt-3 text-xs">
+                      <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
                         <FormStatus
                           token={token}
                           turmaId={t.id}
-                          to="concluida"
-                          label="Marcar concluída"
+                          to="iniciada"
+                          label="🚀 Turma Iniciada"
+                          variant="primary"
                         />
                         <FormStatus
                           token={token}
                           turmaId={t.id}
                           to="cancelada"
                           label="Cancelar"
+                          variant="link"
                         />
                       </div>
                     </>
                   )}
-                  {t.status !== 'em_andamento' && (
-                    <FormStatus
-                      token={token}
-                      turmaId={t.id}
-                      to="em_andamento"
-                      label="Reativar turma"
-                    />
+                  {t.status === 'iniciada' && (
+                    <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center text-xs">
+                      <span className="text-zinc-500">
+                        Contratos: <strong>{matriculados}</strong> · meta {t.meta}
+                      </span>
+                      <FormStatus
+                        token={token}
+                        turmaId={t.id}
+                        to="concluida"
+                        label="Marcar concluída"
+                        variant="link"
+                      />
+                      <FormStatus
+                        token={token}
+                        turmaId={t.id}
+                        to="em_andamento"
+                        label="Reabrir (editar)"
+                        variant="link"
+                      />
+                    </div>
+                  )}
+                  {(t.status === 'concluida' || t.status === 'cancelada') && (
+                    <div className="mt-3 pt-3 border-t border-zinc-100">
+                      <FormStatus
+                        token={token}
+                        turmaId={t.id}
+                        to="em_andamento"
+                        label="Reativar turma"
+                        variant="link"
+                      />
+                    </div>
                   )}
                 </li>
               );
@@ -264,22 +361,25 @@ function FormStatus({
   turmaId,
   to,
   label,
+  variant = 'link',
 }: {
   token: string;
   turmaId: string;
-  to: 'em_andamento' | 'concluida' | 'cancelada';
+  to: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   label: string;
+  variant?: 'primary' | 'link';
 }) {
   async function action() {
     'use server';
     await alterarStatusTurma(token, turmaId, to);
   }
+  const className =
+    variant === 'primary'
+      ? 'bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-emerald-700 transition'
+      : 'text-zinc-500 hover:text-zinc-900 underline underline-offset-2 text-xs';
   return (
     <form action={action}>
-      <button
-        type="submit"
-        className="text-zinc-500 hover:text-zinc-900 underline underline-offset-2"
-      >
+      <button type="submit" className={className}>
         {label}
       </button>
     </form>

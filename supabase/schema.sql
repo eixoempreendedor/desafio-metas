@@ -12,6 +12,7 @@ create table if not exists consultores (
   email       text,
   telefone    text,                       -- formato Z-API: 5561...
   token       text unique not null,       -- login link: /c/{token}
+  meta_anual  integer,                    -- meta de empresas no ano (consultor define)
   ativo       boolean not null default true,
   criado_em   timestamptz not null default now()
 );
@@ -27,7 +28,7 @@ create table if not exists turmas (
   meta         integer not null check (meta > 0),
   data_inicio  date not null,
   status       text not null default 'em_andamento'
-                check (status in ('em_andamento','concluida','cancelada')),
+                check (status in ('em_andamento','iniciada','concluida','cancelada')),
   criado_em    timestamptz not null default now()
 );
 
@@ -66,3 +67,14 @@ alter table consultores         enable row level security;
 alter table turmas              enable row level security;
 alter table updates_semanais    enable row level security;
 alter table relatorios_enviados enable row level security;
+
+-- ─── Privilégios pro service_role ──────────────────────────────
+-- Necessário porque o projeto foi criado com "Automatically expose
+-- new tables and functions" DESMARCADO (boa prática de segurança).
+grant all on all tables    in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant all on all functions in schema public to service_role;
+
+alter default privileges in schema public grant all on tables    to service_role;
+alter default privileges in schema public grant all on sequences to service_role;
+alter default privileges in schema public grant all on functions to service_role;

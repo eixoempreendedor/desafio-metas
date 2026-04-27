@@ -4,6 +4,7 @@ export type Consultor = {
   email: string | null;
   telefone: string | null;
   token: string;
+  meta_anual: number | null;
   ativo: boolean;
   criado_em: string;
 };
@@ -15,7 +16,7 @@ export type Turma = {
   numero: number;
   meta: number;
   data_inicio: string; // ISO date
-  status: 'em_andamento' | 'concluida' | 'cancelada';
+  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   criado_em: string;
 };
 

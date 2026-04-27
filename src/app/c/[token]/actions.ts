@@ -83,10 +83,28 @@ export async function atualizarMatriculados(
   return { ok: true };
 }
 
+export async function atualizarMetaAnual(token: string, formData: FormData) {
+  const consultor = await getConsultor(token);
+  const raw = String(formData.get('meta_anual') ?? '').trim();
+  const meta_anual = raw === '' ? null : parseInt(raw, 10);
+  if (meta_anual !== null && (Number.isNaN(meta_anual) || meta_anual < 0)) {
+    return { ok: false, erro: 'Meta inválida.' };
+  }
+  const sb = supabaseAdmin();
+  const { error } = await sb
+    .from('consultores')
+    .update({ meta_anual })
+    .eq('id', consultor.id);
+  if (error) return { ok: false, erro: error.message };
+  revalidatePath(`/c/${token}`);
+  revalidatePath('/');
+  return { ok: true };
+}
+
 export async function alterarStatusTurma(
   token: string,
   turmaId: string,
-  status: 'em_andamento' | 'concluida' | 'cancelada',
+  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada',
 ) {
   const consultor = await getConsultor(token);
   const sb = supabaseAdmin();
