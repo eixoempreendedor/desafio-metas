@@ -25,7 +25,7 @@ function flag(pct: number): string {
 }
 
 function medal(i: number): string {
-  return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+  return `${i + 1}.`;
 }
 
 /**

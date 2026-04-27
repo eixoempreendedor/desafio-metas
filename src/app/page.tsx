@@ -161,8 +161,8 @@ export default async function Home() {
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-lg">
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
+                    <span className="font-bold text-base text-zinc-500 w-6">
+                      {i + 1}.
                     </span>
                     <span className="font-semibold truncate">
                       {l.consultor}
@@ -209,8 +209,8 @@ export default async function Home() {
                 className="bg-white border border-zinc-200 rounded-lg p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg">
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
+                  <span className="font-bold text-base text-zinc-500 w-6">
+                    {i + 1}.
                   </span>
                   <span className="font-semibold">{l.nome}</span>
                   {!l.meta_anual && (
