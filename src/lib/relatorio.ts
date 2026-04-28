@@ -33,6 +33,13 @@ function medal(i: number): string {
   return `${i + 1}.`;
 }
 
+/** Barra de progresso ASCII pra WhatsApp. Ex: 30% → ▓▓▓▓▓▓░░░░░░░░░░░░░░ */
+function barraProgresso(pct: number, width = 20): string {
+  const clamped = Math.max(0, Math.min(100, pct));
+  const filled = Math.round((clamped / 100) * width);
+  return '▓'.repeat(filled) + '░'.repeat(width - filled);
+}
+
 // Meta agregada do time por ano. Ajuste aqui pra cada ano novo.
 const META_TIME_POR_ANO: Record<number, number> = {
   2026: 290,
@@ -189,6 +196,7 @@ export async function gerarRelatorioSemanal(
           '━━━━━━━━━━━━━━━━━━━━',
           `🏆 *Grupo Cerrado — META ${ano}*`,
           `${empresasTime}/${metaTime} empresas (${pctTime.toFixed(0)}%) ${flag(pctTime)}`,
+          `\`${barraProgresso(pctTime)}\``,
           `_${pctAno.toFixed(0)}% do ano corrido — ${pctTime >= pctAno ? 'no ritmo ✅' : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. pra alinhar com o ano`}_`,
           '━━━━━━━━━━━━━━━━━━━━',
         ].join('\n')
