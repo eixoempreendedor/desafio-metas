@@ -150,7 +150,7 @@ export default async function Home() {
         </h1>
         <p className="text-zinc-600 text-sm mt-1">
           Painel de monitoramento das turmas · {pctAnoCorrido().toFixed(0)}% do
-          ano {ano} corrido
+          ano {ano} já passou
         </p>
       </header>
 
@@ -206,7 +206,7 @@ export default async function Home() {
           🎯 Meta Anual por Consultor ({ano})
         </h2>
         <p className="text-xs text-zinc-500 mb-3 italic">
-          {pctAnoCorrido().toFixed(0)}% do ano corrido — para referência
+          {pctAnoCorrido().toFixed(0)}% do ano já passou — para referência
         </p>
         {linhasAno.length === 0 ? (
           <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
@@ -311,7 +311,7 @@ export default async function Home() {
               />
             </div>
             <p className="text-sm text-emerald-100 mt-3">
-              {pctAno.toFixed(0)}% do ano corrido —{' '}
+              {pctAno.toFixed(0)}% do ano já passou —{' '}
               <strong>
                 {pctTime >= pctAno
                   ? 'no ritmo ✅'

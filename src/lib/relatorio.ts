@@ -196,8 +196,7 @@ export async function gerarRelatorioSemanal(
           `🏆 *Grupo Cerrado — META ${ano}*`,
           `\`${barraProgresso(pctTime)}\``,
           `${empresasTime}/${metaTime} empresas (${pctTime.toFixed(0)}%) ${flag(pctTime)}`,
-          '',
-          `_${pctAno.toFixed(0)}% do ano corrido — ${pctTime >= pctAno ? 'no ritmo ✅' : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. pra alinhar com o ano`}_`,
+          `_${pctAno.toFixed(0)}% do ano já passou — ${pctTime >= pctAno ? 'no ritmo ✅' : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. pra alinhar com o ano`}_`,
         ].join('\n')
       : '';
 
