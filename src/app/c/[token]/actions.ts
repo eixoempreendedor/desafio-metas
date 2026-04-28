@@ -113,7 +113,7 @@ export async function atualizarMetaAnual(token: string, formData: FormData) {
 export async function alterarStatusTurma(
   token: string,
   turmaId: string,
-  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada',
+  status: 'agendada' | 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada',
 ) {
   const consultor = await getConsultor(token);
   const sb = supabaseAdmin();

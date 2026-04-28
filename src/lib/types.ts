@@ -16,7 +16,7 @@ export type Turma = {
   numero: number;
   meta: number;
   data_inicio: string; // ISO date
-  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
+  status: 'agendada' | 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   criado_em: string;
 };
 

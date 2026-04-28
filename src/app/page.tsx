@@ -15,7 +15,7 @@ type TurmaRow = {
   numero: number;
   meta: number;
   data_inicio: string;
-  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
+  status: 'agendada' | 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   consultor_id: string;
   consultores: { nome: string } | { nome: string }[] | null;
   updates_semanais: { matriculados: number; criado_em: string }[];
@@ -131,7 +131,7 @@ export default async function Home() {
       (t) =>
         t.data_inicio >= hojeIso &&
         t.data_inicio <= limiteIso &&
-        t.status === 'em_andamento',
+        (t.status === 'em_andamento' || t.status === 'agendada'),
     )
     .sort((a, b) => a.data_inicio.localeCompare(b.data_inicio));
 
@@ -271,6 +271,17 @@ export default async function Home() {
                   </span>
                   <span className="text-zinc-500 text-sm ml-2">
                     · {nomeConsultor(t.consultores)}
+                  </span>
+                  <span
+                    className={`ml-2 text-xs px-2 py-0.5 rounded ${
+                      t.status === 'em_andamento'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-zinc-100 text-zinc-600'
+                    }`}
+                  >
+                    {t.status === 'em_andamento'
+                      ? '🎯 em formação'
+                      : '🗓️ agendada'}
                   </span>
                 </div>
                 <div className="text-sm font-mono text-zinc-700">

@@ -145,7 +145,7 @@ export async function gerarRelatorioSemanal(
       (l) =>
         l.data_inicio >= hojeIso &&
         l.data_inicio <= limiteIso &&
-        l.status === 'em_andamento',
+        (l.status === 'em_andamento' || l.status === 'agendada'),
     )
     .sort((a, b) => a.data_inicio.localeCompare(b.data_inicio));
 

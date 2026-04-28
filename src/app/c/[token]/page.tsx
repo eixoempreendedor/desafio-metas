@@ -18,7 +18,7 @@ type TurmaDB = {
   numero: number;
   meta: number;
   data_inicio: string;
-  status: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
+  status: 'agendada' | 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   updates_semanais: {
     matriculados: number;
     ano_semana: string;
@@ -189,12 +189,14 @@ export default async function ConsultorPage({ params }: Props) {
                     : 'text-red-600';
               const statusBadge =
                 t.status === 'em_andamento'
-                  ? null
-                  : t.status === 'iniciada'
-                    ? '🚀 iniciada (travada)'
-                    : t.status === 'concluida'
-                      ? '✅ concluída'
-                      : '❌ cancelada';
+                  ? '🎯 em formação comercial'
+                  : t.status === 'agendada'
+                    ? '🗓️ agendada — ainda não em formação comercial'
+                    : t.status === 'iniciada'
+                      ? '🚀 iniciada (travada)'
+                      : t.status === 'concluida'
+                        ? '✅ concluída'
+                        : '❌ cancelada';
               return (
                 <li
                   key={t.id}
@@ -224,6 +226,24 @@ export default async function ConsultorPage({ params }: Props) {
                     </div>
                   </div>
 
+                  {t.status === 'agendada' && (
+                    <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
+                      <FormStatus
+                        token={token}
+                        turmaId={t.id}
+                        to="em_andamento"
+                        label="▶️ Iniciar Formação Comercial"
+                        variant="primary"
+                      />
+                      <FormStatus
+                        token={token}
+                        turmaId={t.id}
+                        to="cancelada"
+                        label="Cancelar"
+                        variant="link"
+                      />
+                    </div>
+                  )}
                   {t.status === 'em_andamento' && (
                     <>
                       <form
@@ -269,6 +289,13 @@ export default async function ConsultorPage({ params }: Props) {
                           to="iniciada"
                           label="🚀 Turma Iniciada"
                           variant="primary"
+                        />
+                        <FormStatus
+                          token={token}
+                          turmaId={t.id}
+                          to="agendada"
+                          label="Voltar pra agendada"
+                          variant="link"
                         />
                         <FormStatus
                           token={token}
@@ -365,7 +392,7 @@ function FormStatus({
 }: {
   token: string;
   turmaId: string;
-  to: 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
+  to: 'agendada' | 'em_andamento' | 'iniciada' | 'concluida' | 'cancelada';
   label: string;
   variant?: 'primary' | 'link';
 }) {

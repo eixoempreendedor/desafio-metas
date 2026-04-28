@@ -27,8 +27,8 @@ create table if not exists turmas (
   numero       integer not null,
   meta         integer not null check (meta > 0),
   data_inicio  date not null,
-  status       text not null default 'em_andamento'
-                check (status in ('em_andamento','iniciada','concluida','cancelada')),
+  status       text not null default 'agendada'
+                check (status in ('agendada','em_andamento','iniciada','concluida','cancelada')),
   criado_em    timestamptz not null default now(),
   unique (consultor_id, cidade, numero)
 );
