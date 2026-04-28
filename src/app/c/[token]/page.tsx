@@ -5,7 +5,6 @@ import {
   criarTurma,
   atualizarMatriculados,
   alterarStatusTurma,
-  atualizarMetaAnual,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -66,10 +65,6 @@ export default async function ConsultorPage({ params }: Props) {
   async function atualizar(formData: FormData) {
     'use server';
     await atualizarMatriculados(token, formData);
-  }
-  async function salvarMetaAnual(formData: FormData) {
-    'use server';
-    await atualizarMetaAnual(token, formData);
   }
 
   // Empresas do consultor neste ano (soma do último update de cada turma de 2026)
@@ -268,54 +263,36 @@ export default async function ConsultorPage({ params }: Props) {
         </p>
       </header>
 
-      {/* ─── Meta anual ─── */}
-      <section className="bg-white border border-zinc-200 rounded-lg p-4 mb-6">
-        <h2 className="font-semibold mb-3">🎯 Meta anual ({ano})</h2>
-        <form
-          action={salvarMetaAnual}
-          className="flex flex-wrap items-end gap-3"
-        >
-          <div className="flex-1 min-w-[140px]">
-            <label className="block text-xs text-zinc-500 mb-1">
-              Meta de empresas no ano
-            </label>
-            <input
-              name="meta_anual"
-              type="number"
-              min={0}
-              defaultValue={metaAnual ?? ''}
-              placeholder="Ex: 100"
-              className="w-full border border-zinc-300 rounded px-3 py-2"
-            />
+      {/* ─── Meta anual (read-only) ─── */}
+      {metaAnual !== null && metaAnual > 0 && (
+        <section className="bg-white border border-zinc-200 rounded-lg p-4 mb-6">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <h2 className="font-semibold">
+              🎯 Sua meta {ano}:{' '}
+              <span className="font-mono">{metaAnual}</span> empresas
+            </h2>
+            <span className="text-zinc-500 text-sm sm:ml-auto">
+              No ano:{' '}
+              <span className="font-mono font-semibold">
+                {empresasNoAno}/{metaAnual}
+              </span>
+              {pctAnual !== null && (
+                <span
+                  className={`ml-2 font-semibold ${
+                    pctAnual >= 80
+                      ? 'text-green-600'
+                      : pctAnual >= 50
+                        ? 'text-amber-600'
+                        : 'text-red-600'
+                  }`}
+                >
+                  ({pctAnual.toFixed(0)}%)
+                </span>
+              )}
+            </span>
           </div>
-          <button
-            type="submit"
-            className="bg-zinc-900 text-white rounded-lg px-4 py-2 font-semibold hover:bg-zinc-700 transition"
-          >
-            Salvar meta
-          </button>
-          <div className="w-full sm:w-auto sm:ml-auto text-right">
-            <div className="text-xs text-zinc-500">No ano</div>
-            <div className="font-mono text-lg font-semibold">
-              {empresasNoAno}
-              {metaAnual ? `/${metaAnual}` : ''} empresas
-            </div>
-            {pctAnual !== null && (
-              <div
-                className={`text-sm font-semibold ${
-                  pctAnual >= 80
-                    ? 'text-green-600'
-                    : pctAnual >= 50
-                      ? 'text-amber-600'
-                      : 'text-red-600'
-                }`}
-              >
-                {pctAnual.toFixed(0)}%
-              </div>
-            )}
-          </div>
-        </form>
-      </section>
+        </section>
+      )}
 
       {/* ─── 1. EM FORMAÇÃO COMERCIAL (destaque no topo) ─── */}
       <section className="mb-8">
