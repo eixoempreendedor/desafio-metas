@@ -1,5 +1,10 @@
 import { supabaseAdmin } from './supabase';
-import { isoWeek, formatDateBR, pctAnoCorrido } from './week';
+import {
+  isoWeek,
+  formatDateBR,
+  pctAnoCorrido,
+  formatSemanaBR,
+} from './week';
 
 type LinhaTurma = {
   consultor: string;
@@ -182,7 +187,7 @@ export async function gerarRelatorioSemanal(
     metaTime && pctTime !== null
       ? [
           '━━━━━━━━━━━━━━━━━━━━',
-          `🏆 *TIME CERRADO — META ${ano}*`,
+          `🏆 *Grupo Cerrado — META ${ano}*`,
           `${empresasTime}/${metaTime} empresas (${pctTime.toFixed(0)}%) ${flag(pctTime)}`,
           `_${pctAno.toFixed(0)}% do ano corrido — ${pctTime >= pctAno ? 'no ritmo ✅' : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. pra alinhar com o ano`}_`,
           '━━━━━━━━━━━━━━━━━━━━',
@@ -190,7 +195,7 @@ export async function gerarRelatorioSemanal(
       : '';
 
   const mensagem = [
-    `📊 *DESAFIO EMPREENDEDOR — ${semana}*`,
+    `📊 *Grupo Desafio — ${formatSemanaBR(semana)}*`,
     '',
     '*🎯 Turmas em Formação Comercial*',
     blocoTurmas,

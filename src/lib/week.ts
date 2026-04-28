@@ -26,6 +26,11 @@ export function formatDateBR(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
+/** Converte ISO week '2026-W18' para formato BR '2026-S18'. */
+export function formatSemanaBR(isoWeekStr: string): string {
+  return isoWeekStr.replace('-W', '-S');
+}
+
 /** % do ano corrido (0-100) na data informada. */
 export function pctAnoCorrido(d: Date = new Date()): number {
   const y = d.getUTCFullYear();

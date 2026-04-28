@@ -289,7 +289,7 @@ export default async function Home() {
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">🏆</span>
               <h2 className="text-lg font-bold uppercase tracking-wide">
-                Time Cerrado — Meta {ano}
+                Grupo Cerrado — Meta {ano}
               </h2>
             </div>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">

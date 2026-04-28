@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { formatDateBR, isoWeek } from '@/lib/week';
+import { formatDateBR, isoWeek, formatSemanaBR } from '@/lib/week';
 import {
   criarTurma,
   atualizarMatriculados,
@@ -90,10 +90,10 @@ export default async function ConsultorPage({ params }: Props) {
   return (
     <main className="max-w-3xl mx-auto p-4 sm:p-6">
       <header className="mb-6">
-        <p className="text-sm text-zinc-500">Desafio Empreendedor</p>
+        <p className="text-sm text-zinc-500">Grupo Desafio</p>
         <h1 className="text-2xl font-bold">Olá, {consultor.nome} 👋</h1>
         <p className="text-sm text-zinc-600 mt-1">
-          Semana <span className="font-mono">{semanaAtual}</span>
+          Semana <span className="font-mono">{formatSemanaBR(semanaAtual)}</span>
         </p>
       </header>
 
