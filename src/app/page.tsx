@@ -154,6 +154,46 @@ export default async function Home() {
         </p>
       </header>
 
+      {/* ─── Meta Grupo Cerrado (TOPO em destaque) ─── */}
+      {metaTime && pctTime !== null && (
+        <section className="mb-8">
+          <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-xl p-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🏆</span>
+              <h2 className="text-lg font-bold uppercase tracking-wide">
+                Grupo Cerrado — Meta {ano}
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <div className="font-mono text-4xl font-bold">
+                {empresasTime}
+                <span className="text-emerald-300 font-normal">
+                  /{metaTime}
+                </span>
+              </div>
+              <div className="text-2xl font-semibold">
+                {pctTime.toFixed(0)}%
+              </div>
+              <div className="text-sm text-emerald-100">empresas</div>
+            </div>
+            <div className="mt-3 h-3 bg-emerald-900/50 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-300"
+                style={{ width: `${Math.min(100, pctTime)}%` }}
+              />
+            </div>
+            <p className="text-sm text-emerald-100 mt-3">
+              {pctAno.toFixed(0)}% do ano já passou —{' '}
+              <strong>
+                {pctTime >= pctAno
+                  ? 'no ritmo ✅'
+                  : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. para alinhar com o ano`}
+              </strong>
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* ─── Turmas em Formação Comercial ─── */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3">
@@ -293,45 +333,6 @@ export default async function Home() {
         )}
       </section>
 
-      {/* ─── Meta Time Cerrado ─── */}
-      {metaTime && pctTime !== null && (
-        <section className="mt-10">
-          <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-xl p-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🏆</span>
-              <h2 className="text-lg font-bold uppercase tracking-wide">
-                Grupo Cerrado — Meta {ano}
-              </h2>
-            </div>
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <div className="font-mono text-4xl font-bold">
-                {empresasTime}
-                <span className="text-emerald-300 font-normal">
-                  /{metaTime}
-                </span>
-              </div>
-              <div className="text-2xl font-semibold">
-                {pctTime.toFixed(0)}%
-              </div>
-              <div className="text-sm text-emerald-100">empresas</div>
-            </div>
-            <div className="mt-3 h-3 bg-emerald-900/50 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-300"
-                style={{ width: `${Math.min(100, pctTime)}%` }}
-              />
-            </div>
-            <p className="text-sm text-emerald-100 mt-3">
-              {pctAno.toFixed(0)}% do ano já passou —{' '}
-              <strong>
-                {pctTime >= pctAno
-                  ? 'no ritmo ✅'
-                  : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. para alinhar com o ano`}
-              </strong>
-            </p>
-          </div>
-        </section>
-      )}
     </main>
   );
 }
