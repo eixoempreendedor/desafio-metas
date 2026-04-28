@@ -87,6 +87,177 @@ export default async function ConsultorPage({ params }: Props) {
   const pctAnual =
     metaAnual && metaAnual > 0 ? (empresasNoAno / metaAnual) * 100 : null;
 
+  // ─── Agrupa turmas por status ──────────────────────────────────
+  const emFormacao = lista.filter((t) => t.status === 'em_andamento');
+  const aIniciar = lista
+    .filter((t) => t.status === 'agendada')
+    .sort((a, b) => a.data_inicio.localeCompare(b.data_inicio));
+  const iniciadas = lista.filter((t) => t.status === 'iniciada');
+  const historico = lista.filter(
+    (t) => t.status === 'concluida' || t.status === 'cancelada',
+  );
+
+  function renderTurma(t: (typeof lista)[number]) {
+    const matriculados = t.ultimo?.matriculados ?? 0;
+    const pct = t.meta > 0 ? (matriculados / t.meta) * 100 : 0;
+    const cor =
+      pct >= 80
+        ? 'text-green-600'
+        : pct >= 50
+          ? 'text-amber-600'
+          : 'text-red-600';
+    const statusBadge =
+      t.status === 'em_andamento'
+        ? '🎯 em formação comercial'
+        : t.status === 'agendada'
+          ? '🗓️ agendada — ainda não em formação comercial'
+          : t.status === 'iniciada'
+            ? '🚀 iniciada (travada)'
+            : t.status === 'concluida'
+              ? '✅ concluída'
+              : '❌ cancelada';
+    return (
+      <li
+        key={t.id}
+        className="bg-white border border-zinc-200 rounded-lg p-4"
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h3 className="font-semibold">
+              {t.cidade} — Turma {t.numero}
+            </h3>
+            <p className="text-xs text-zinc-500">
+              Início {formatDateBR(t.data_inicio)}
+            </p>
+            <span className="text-xs text-zinc-500">{statusBadge}</span>
+          </div>
+          <div className="text-right">
+            <div className="font-mono text-lg font-semibold">
+              {matriculados}/{t.meta}
+            </div>
+            <div className={`text-sm font-semibold ${cor}`}>
+              {pct.toFixed(0)}%
+            </div>
+          </div>
+        </div>
+
+        {t.status === 'agendada' && (
+          <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
+            <FormStatus
+              token={token}
+              turmaId={t.id}
+              to="em_andamento"
+              label="▶️ Iniciar Formação Comercial"
+              variant="primary"
+            />
+            <FormStatus
+              token={token}
+              turmaId={t.id}
+              to="cancelada"
+              label="Cancelar"
+              variant="link"
+            />
+          </div>
+        )}
+        {t.status === 'em_andamento' && (
+          <>
+            <form
+              action={atualizar}
+              className="flex flex-wrap gap-2 items-end pt-3 border-t border-zinc-100"
+            >
+              <input type="hidden" name="turma_id" value={t.id} />
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs text-zinc-500 mb-1">
+                  Contratos Totais
+                </label>
+                <input
+                  name="matriculados"
+                  type="number"
+                  min={0}
+                  defaultValue={t.naSemana?.matriculados ?? matriculados}
+                  required
+                  className="w-full border border-zinc-300 rounded px-2 py-2"
+                />
+              </div>
+              <div className="flex-1 min-w-[180px]">
+                <label className="block text-xs text-zinc-500 mb-1">
+                  Observação (opcional)
+                </label>
+                <input
+                  name="observacao"
+                  type="text"
+                  defaultValue={''}
+                  className="w-full border border-zinc-300 rounded px-2 py-2"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-zinc-900 text-white rounded-lg px-4 py-2 font-semibold hover:bg-zinc-700 transition"
+              >
+                Salvar
+              </button>
+            </form>
+            <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
+              <FormStatus
+                token={token}
+                turmaId={t.id}
+                to="iniciada"
+                label="🚀 Turma Iniciada"
+                variant="primary"
+              />
+              <FormStatus
+                token={token}
+                turmaId={t.id}
+                to="agendada"
+                label="Voltar pra agendada"
+                variant="link"
+              />
+              <FormStatus
+                token={token}
+                turmaId={t.id}
+                to="cancelada"
+                label="Cancelar"
+                variant="link"
+              />
+            </div>
+          </>
+        )}
+        {t.status === 'iniciada' && (
+          <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center text-xs">
+            <span className="text-zinc-500">
+              Contratos: <strong>{matriculados}</strong> · meta {t.meta}
+            </span>
+            <FormStatus
+              token={token}
+              turmaId={t.id}
+              to="concluida"
+              label="Marcar concluída"
+              variant="link"
+            />
+            <FormStatus
+              token={token}
+              turmaId={t.id}
+              to="em_andamento"
+              label="Reabrir (editar)"
+              variant="link"
+            />
+          </div>
+        )}
+        {(t.status === 'concluida' || t.status === 'cancelada') && (
+          <div className="mt-3 pt-3 border-t border-zinc-100">
+            <FormStatus
+              token={token}
+              turmaId={t.id}
+              to="em_andamento"
+              label="Reativar turma"
+              variant="link"
+            />
+          </div>
+        )}
+      </li>
+    );
+  }
+
   return (
     <main className="max-w-3xl mx-auto p-4 sm:p-6">
       <header className="mb-6">
@@ -146,9 +317,78 @@ export default async function ConsultorPage({ params }: Props) {
         </form>
       </section>
 
-      {/* ─── Nova turma ─── */}
+      {/* ─── 1. EM FORMAÇÃO COMERCIAL (destaque no topo) ─── */}
+      <section className="mb-8">
+        <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+          <span className="text-2xl">🎯</span>
+          Turmas em Formação Comercial
+        </h2>
+        <p className="text-xs text-zinc-500 mb-3">
+          Captando contratos agora — entram no ranking semanal
+        </p>
+        {emFormacao.length === 0 ? (
+          <p className="text-zinc-500 text-sm bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
+            Nenhuma turma em formação comercial. Use o botão{' '}
+            <strong>▶️ Iniciar Formação Comercial</strong> nas turmas agendadas
+            quando começar a captar.
+          </p>
+        ) : (
+          <div className="border-l-4 border-emerald-500 pl-3">
+            <ul className="space-y-3">{emFormacao.map(renderTurma)}</ul>
+          </div>
+        )}
+      </section>
+
+      {/* ─── 2. A SEREM INICIADAS (agendadas) ─── */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-1">
+          🗓️ Turmas a serem iniciadas
+        </h2>
+        <p className="text-xs text-zinc-500 mb-3">
+          Cadastradas, ainda não estão captando contratos
+        </p>
+        {aIniciar.length === 0 ? (
+          <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
+            Nenhuma turma agendada.
+          </p>
+        ) : (
+          <ul className="space-y-3">{aIniciar.map(renderTurma)}</ul>
+        )}
+      </section>
+
+      {/* ─── 3. INICIADAS (travadas) ─── */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-1">🚀 Turmas Iniciadas</h2>
+        <p className="text-xs text-zinc-500 mb-3">
+          Turma já começou — contratos travados
+        </p>
+        {iniciadas.length === 0 ? (
+          <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
+            Nenhuma turma iniciada ainda.
+          </p>
+        ) : (
+          <ul className="space-y-3">{iniciadas.map(renderTurma)}</ul>
+        )}
+      </section>
+
+      {/* ─── 4. HISTÓRICO (concluídas/canceladas) ─── */}
+      {historico.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-zinc-500 mb-3 uppercase tracking-wide">
+            Histórico
+          </h2>
+          <ul className="space-y-3 opacity-70">{historico.map(renderTurma)}</ul>
+        </section>
+      )}
+
+      {/* ─── 5. NOVA TURMA (final) ─── */}
       <section className="bg-white border border-zinc-200 rounded-lg p-4 mb-6">
-        <h2 className="font-semibold mb-3">➕ Nova turma</h2>
+        <h2 className="font-semibold mb-3">➕ Cadastrar nova turma</h2>
+        <p className="text-xs text-zinc-500 mb-3">
+          Vai nascer como{' '}
+          <strong>🗓️ agendada</strong> — clica em "Iniciar Formação Comercial"
+          quando começar a captar contratos.
+        </p>
         <form action={criar} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Field label="Cidade" name="cidade" required className="col-span-2" />
           <Field label="Nº turma" name="numero" type="number" min={1} required />
@@ -167,183 +407,6 @@ export default async function ConsultorPage({ params }: Props) {
             Cadastrar turma
           </button>
         </form>
-      </section>
-
-      {/* ─── Minhas turmas ─── */}
-      <section>
-        <h2 className="font-semibold mb-3">Minhas turmas</h2>
-        {lista.length === 0 ? (
-          <p className="text-zinc-500 text-sm bg-white border border-zinc-200 rounded-lg p-6 text-center">
-            Você ainda não cadastrou nenhuma turma.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {lista.map((t) => {
-              const matriculados = t.ultimo?.matriculados ?? 0;
-              const pct = t.meta > 0 ? (matriculados / t.meta) * 100 : 0;
-              const cor =
-                pct >= 80
-                  ? 'text-green-600'
-                  : pct >= 50
-                    ? 'text-amber-600'
-                    : 'text-red-600';
-              const statusBadge =
-                t.status === 'em_andamento'
-                  ? '🎯 em formação comercial'
-                  : t.status === 'agendada'
-                    ? '🗓️ agendada — ainda não em formação comercial'
-                    : t.status === 'iniciada'
-                      ? '🚀 iniciada (travada)'
-                      : t.status === 'concluida'
-                        ? '✅ concluída'
-                        : '❌ cancelada';
-              return (
-                <li
-                  key={t.id}
-                  className="bg-white border border-zinc-200 rounded-lg p-4"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold">
-                        {t.cidade} — Turma {t.numero}
-                      </h3>
-                      <p className="text-xs text-zinc-500">
-                        Início {formatDateBR(t.data_inicio)}
-                      </p>
-                      {statusBadge && (
-                        <span className="text-xs text-zinc-500">
-                          {statusBadge}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-lg font-semibold">
-                        {matriculados}/{t.meta}
-                      </div>
-                      <div className={`text-sm font-semibold ${cor}`}>
-                        {pct.toFixed(0)}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {t.status === 'agendada' && (
-                    <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
-                      <FormStatus
-                        token={token}
-                        turmaId={t.id}
-                        to="em_andamento"
-                        label="▶️ Iniciar Formação Comercial"
-                        variant="primary"
-                      />
-                      <FormStatus
-                        token={token}
-                        turmaId={t.id}
-                        to="cancelada"
-                        label="Cancelar"
-                        variant="link"
-                      />
-                    </div>
-                  )}
-                  {t.status === 'em_andamento' && (
-                    <>
-                      <form
-                        action={atualizar}
-                        className="flex flex-wrap gap-2 items-end pt-3 border-t border-zinc-100"
-                      >
-                        <input type="hidden" name="turma_id" value={t.id} />
-                        <div className="flex-1 min-w-[120px]">
-                          <label className="block text-xs text-zinc-500 mb-1">
-                            Contratos Totais
-                          </label>
-                          <input
-                            name="matriculados"
-                            type="number"
-                            min={0}
-                            defaultValue={t.naSemana?.matriculados ?? matriculados}
-                            required
-                            className="w-full border border-zinc-300 rounded px-2 py-2"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-[180px]">
-                          <label className="block text-xs text-zinc-500 mb-1">
-                            Observação (opcional)
-                          </label>
-                          <input
-                            name="observacao"
-                            type="text"
-                            defaultValue={''}
-                            className="w-full border border-zinc-300 rounded px-2 py-2"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="bg-zinc-900 text-white rounded-lg px-4 py-2 font-semibold hover:bg-zinc-700 transition"
-                        >
-                          Salvar
-                        </button>
-                      </form>
-                      <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center">
-                        <FormStatus
-                          token={token}
-                          turmaId={t.id}
-                          to="iniciada"
-                          label="🚀 Turma Iniciada"
-                          variant="primary"
-                        />
-                        <FormStatus
-                          token={token}
-                          turmaId={t.id}
-                          to="agendada"
-                          label="Voltar pra agendada"
-                          variant="link"
-                        />
-                        <FormStatus
-                          token={token}
-                          turmaId={t.id}
-                          to="cancelada"
-                          label="Cancelar"
-                          variant="link"
-                        />
-                      </div>
-                    </>
-                  )}
-                  {t.status === 'iniciada' && (
-                    <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-zinc-100 items-center text-xs">
-                      <span className="text-zinc-500">
-                        Contratos: <strong>{matriculados}</strong> · meta {t.meta}
-                      </span>
-                      <FormStatus
-                        token={token}
-                        turmaId={t.id}
-                        to="concluida"
-                        label="Marcar concluída"
-                        variant="link"
-                      />
-                      <FormStatus
-                        token={token}
-                        turmaId={t.id}
-                        to="em_andamento"
-                        label="Reabrir (editar)"
-                        variant="link"
-                      />
-                    </div>
-                  )}
-                  {(t.status === 'concluida' || t.status === 'cancelada') && (
-                    <div className="mt-3 pt-3 border-t border-zinc-100">
-                      <FormStatus
-                        token={token}
-                        turmaId={t.id}
-                        to="em_andamento"
-                        label="Reativar turma"
-                        variant="link"
-                      />
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </section>
 
       <footer className="mt-10 text-xs text-zinc-400 text-center">
