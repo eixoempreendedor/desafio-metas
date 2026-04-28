@@ -3,6 +3,10 @@ import { formatDateBR, pctAnoCorrido } from '@/lib/week';
 
 export const dynamic = 'force-dynamic';
 
+const META_TIME_POR_ANO: Record<number, number> = {
+  2026: 290,
+};
+
 type ConsultorRow = { id: string; nome: string; meta_anual: number | null };
 
 type TurmaRow = {
@@ -131,6 +135,13 @@ export default async function Home() {
     )
     .sort((a, b) => a.data_inicio.localeCompare(b.data_inicio));
 
+  // ─── Meta Time Cerrado (agregado) ──────────────────────────────
+  const metaTime = META_TIME_POR_ANO[ano];
+  const empresasTime = linhasAno.reduce((s, l) => s + l.empresas, 0);
+  const pctTime =
+    metaTime && metaTime > 0 ? (empresasTime / metaTime) * 100 : null;
+  const pctAno = pctAnoCorrido();
+
   return (
     <main className="max-w-5xl mx-auto p-4 sm:p-6">
       <header className="mb-6">
@@ -239,7 +250,7 @@ export default async function Home() {
       </section>
 
       {/* ─── Próximas turmas ─── */}
-      <section>
+      <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3">
           📅 Próximas Turmas (60 dias)
         </h2>
@@ -270,6 +281,46 @@ export default async function Home() {
           </ul>
         )}
       </section>
+
+      {/* ─── Meta Time Cerrado ─── */}
+      {metaTime && pctTime !== null && (
+        <section className="mt-10">
+          <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-xl p-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🏆</span>
+              <h2 className="text-lg font-bold uppercase tracking-wide">
+                Time Cerrado — Meta {ano}
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <div className="font-mono text-4xl font-bold">
+                {empresasTime}
+                <span className="text-emerald-300 font-normal">
+                  /{metaTime}
+                </span>
+              </div>
+              <div className="text-2xl font-semibold">
+                {pctTime.toFixed(0)}%
+              </div>
+              <div className="text-sm text-emerald-100">empresas</div>
+            </div>
+            <div className="mt-3 h-3 bg-emerald-900/50 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-300"
+                style={{ width: `${Math.min(100, pctTime)}%` }}
+              />
+            </div>
+            <p className="text-sm text-emerald-100 mt-3">
+              {pctAno.toFixed(0)}% do ano corrido —{' '}
+              <strong>
+                {pctTime >= pctAno
+                  ? 'no ritmo ✅'
+                  : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. para alinhar com o ano`}
+              </strong>
+            </p>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

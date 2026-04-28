@@ -28,6 +28,11 @@ function medal(i: number): string {
   return `${i + 1}.`;
 }
 
+// Meta agregada do time por ano. Ajuste aqui pra cada ano novo.
+const META_TIME_POR_ANO: Record<number, number> = {
+  2026: 290,
+};
+
 /**
  * Gera o relatório semanal formatado pra WhatsApp.
  * 4 seções: header, monitoramento de turmas, meta anual por consultor,
@@ -167,6 +172,23 @@ export async function gerarRelatorioSemanal(
 
   const pctAno = pctAnoCorrido();
 
+  // ─── Meta agregada Time Cerrado ─────────────────────────────────
+  const metaTime = META_TIME_POR_ANO[ano];
+  const empresasTime = linhasAnuais.reduce((s, l) => s + l.empresas, 0);
+  const pctTime =
+    metaTime && metaTime > 0 ? (empresasTime / metaTime) * 100 : null;
+
+  const blocoTime =
+    metaTime && pctTime !== null
+      ? [
+          '━━━━━━━━━━━━━━━━━━━━',
+          `🏆 *TIME CERRADO — META ${ano}*`,
+          `${empresasTime}/${metaTime} empresas (${pctTime.toFixed(0)}%) ${flag(pctTime)}`,
+          `_${pctAno.toFixed(0)}% do ano corrido — ${pctTime >= pctAno ? 'no ritmo ✅' : `faltam ${(pctAno - pctTime).toFixed(0)}p.p. pra alinhar com o ano`}_`,
+          '━━━━━━━━━━━━━━━━━━━━',
+        ].join('\n')
+      : '';
+
   const mensagem = [
     `📊 *DESAFIO EMPREENDEDOR — ${semana}*`,
     '',
@@ -178,6 +200,7 @@ export async function gerarRelatorioSemanal(
     '',
     '*📅 Próximas Turmas (60 dias)*',
     blocoProximas,
+    ...(blocoTime ? ['', blocoTime] : []),
   ].join('\n');
 
   return { mensagem, totalMatriculados, totalMeta };
