@@ -3,6 +3,7 @@ import { gerarRelatorioSemanal } from '@/lib/relatorio';
 import { sendZapiText } from '@/lib/zapi';
 import { supabaseAdmin } from '@/lib/supabase';
 import { isoWeek } from '@/lib/week';
+import { mensagemInspiracaoDoDia } from '@/lib/inspiracao';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,33 +40,67 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  const inspiracao = mensagemInspiracaoDoDia();
+
   if (dryParam) {
-    return NextResponse.json({ semana, destino, mensagem, dry: true });
+    return NextResponse.json({
+      semana,
+      destino,
+      mensagem,
+      inspiracao,
+      dry: true,
+    });
   }
 
-  let resultado;
-  let sucesso = false;
-  let erro: string | null = null;
+  // 1) Envia o status
+  let resStatus;
+  let sucessoStatus = false;
+  let erroStatus: string | null = null;
   try {
-    resultado = await sendZapiText(destino, mensagem);
-    sucesso = resultado.ok;
-    if (!resultado.ok) erro = `status ${resultado.status}`;
+    resStatus = await sendZapiText(destino, mensagem);
+    sucessoStatus = resStatus.ok;
+    if (!resStatus.ok) erroStatus = `status ${resStatus.status}`;
   } catch (e) {
-    erro = e instanceof Error ? e.message : String(e);
+    erroStatus = e instanceof Error ? e.message : String(e);
   }
 
-  // Log no banco
+  // 2) Pequena pausa pra Z-API entregar em ordem (typing simulado)
+  await new Promise((r) => setTimeout(r, 1500));
+
+  // 3) Envia a inspiração do dia
+  let resInspiracao;
+  let sucessoInspiracao = false;
+  let erroInspiracao: string | null = null;
+  try {
+    resInspiracao = await sendZapiText(destino, inspiracao);
+    sucessoInspiracao = resInspiracao.ok;
+    if (!resInspiracao.ok)
+      erroInspiracao = `status ${resInspiracao.status}`;
+  } catch (e) {
+    erroInspiracao = e instanceof Error ? e.message : String(e);
+  }
+
+  // Log no banco (status)
   try {
     await supabaseAdmin().from('relatorios_enviados').insert({
       ano_semana: semana,
       destino,
       mensagem,
-      sucesso,
-      erro,
+      sucesso: sucessoStatus,
+      erro: erroStatus,
     });
   } catch (e) {
     console.error('[cron] falha ao logar relatorio_enviado:', e);
   }
 
-  return NextResponse.json({ semana, destino, sucesso, erro, resultado });
+  return NextResponse.json({
+    semana,
+    destino,
+    status: { sucesso: sucessoStatus, erro: erroStatus, resultado: resStatus },
+    inspiracao: {
+      sucesso: sucessoInspiracao,
+      erro: erroInspiracao,
+      resultado: resInspiracao,
+    },
+  });
 }
