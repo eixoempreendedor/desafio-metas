@@ -9,14 +9,21 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
+ * Destino padrão do disparo diário: grupo "Equipe DE CERRADO" no WhatsApp.
+ * Hardcoded pra ser autônomo — Vercel Cron dispara todo dia às 6h BRT
+ * sem depender de env var nem de máquina local.
+ */
+const GRUPO_EQUIPE_DE_CERRADO = '120363424664353784-group';
+
+/**
  * GET /api/cron/relatorio
  *
- * Gera e envia o relatório semanal via Z-API. Protegido por CRON_SECRET
+ * Gera e envia o relatório diário via Z-API. Protegido por CRON_SECRET
  * (Vercel Cron envia automaticamente o header Authorization).
  *
  * Aceita query string:
  *   ?dry=1     → não envia (só retorna a mensagem)
- *   ?destino=  → sobrescreve ZAPI_DESTINATION (ex: ?destino=5561...)
+ *   ?destino=  → sobrescreve o destino padrão (ex: ?destino=5561...)
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -32,13 +39,7 @@ export async function GET(req: NextRequest) {
   const semana = isoWeek();
   const { mensagem } = await gerarRelatorioSemanal(semana);
 
-  const destino = destinoOverride || process.env.ZAPI_DESTINATION;
-  if (!destino) {
-    return NextResponse.json(
-      { erro: 'ZAPI_DESTINATION não configurado' },
-      { status: 500 },
-    );
-  }
+  const destino = destinoOverride || GRUPO_EQUIPE_DE_CERRADO;
 
   const inspiracao = mensagemInspiracaoDoDia();
 
