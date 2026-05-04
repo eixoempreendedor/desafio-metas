@@ -116,6 +116,11 @@ export async function gerarRelatorioSemanal(
   const totalMatriculados = ativas.reduce((s, l) => s + l.matriculados, 0);
   const totalMeta = ativas.reduce((s, l) => s + l.meta, 0);
 
+  // ─── Turmas iniciadas (já travadas, em execução) ────────────────
+  const iniciadas = linhas
+    .filter((l) => l.status === 'iniciada')
+    .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
+
   // ─── Meta anual por consultor ───────────────────────────────────
   type ConsultorRow = { id: string; nome: string; meta_anual: number | null };
   const linhasAnuais: LinhaAnual[] = (
@@ -157,6 +162,16 @@ export async function gerarRelatorioSemanal(
           .map(
             (l, i) =>
               `${medal(i)} ${l.consultor} — ${l.cidade} T${l.numero} — ${l.matriculados}/${l.meta} (${l.pct.toFixed(0)}%) ${flag(l.pct)}`,
+          )
+          .join('\n');
+
+  const blocoIniciadas =
+    iniciadas.length === 0
+      ? '_(nenhuma turma iniciada ainda este ano)_'
+      : iniciadas
+          .map(
+            (l) =>
+              `🚀 ${l.consultor} — ${l.cidade} T${l.numero} — ${l.matriculados}/${l.meta} (${l.pct.toFixed(0)}%) · ${formatDateBR(l.data_inicio)}`,
           )
           .join('\n');
 
