@@ -3,14 +3,13 @@ import { gerarRelatorioSemanal } from '@/lib/relatorio';
 import { sendZapiText } from '@/lib/zapi';
 import { supabaseAdmin } from '@/lib/supabase';
 import { isoWeek } from '@/lib/week';
-import { mensagemInspiracaoDoDia } from '@/lib/inspiracao';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Destino padrão do disparo diário: grupo "Equipe DE CERRADO" no WhatsApp.
- * Hardcoded pra ser autônomo — Vercel Cron dispara todo dia às 6h BRT
+ * Destino padrão do disparo semanal: grupo "Equipe DE CERRADO" no WhatsApp.
+ * Hardcoded pra ser autônomo — Vercel Cron dispara toda segunda-feira às 6h BRT
  * sem depender de env var nem de máquina local.
  */
 const GRUPO_EQUIPE_DE_CERRADO = '120363424664353784-group';
@@ -18,7 +17,7 @@ const GRUPO_EQUIPE_DE_CERRADO = '120363424664353784-group';
 /**
  * GET /api/cron/relatorio
  *
- * Gera e envia o relatório diário via Z-API. Protegido por CRON_SECRET
+ * Gera e envia o relatório semanal via Z-API. Protegido por CRON_SECRET
  * (Vercel Cron envia automaticamente o header Authorization).
  *
  * Aceita query string:
@@ -41,19 +40,16 @@ export async function GET(req: NextRequest) {
 
   const destino = destinoOverride || GRUPO_EQUIPE_DE_CERRADO;
 
-  const inspiracao = mensagemInspiracaoDoDia();
-
   if (dryParam) {
     return NextResponse.json({
       semana,
       destino,
       mensagem,
-      inspiracao,
       dry: true,
     });
   }
 
-  // 1) Envia o status
+  // Envia o relatório de status
   let resStatus;
   let sucessoStatus = false;
   let erroStatus: string | null = null;
@@ -63,22 +59,6 @@ export async function GET(req: NextRequest) {
     if (!resStatus.ok) erroStatus = `status ${resStatus.status}`;
   } catch (e) {
     erroStatus = e instanceof Error ? e.message : String(e);
-  }
-
-  // 2) Pequena pausa pra Z-API entregar em ordem (typing simulado)
-  await new Promise((r) => setTimeout(r, 1500));
-
-  // 3) Envia a inspiração do dia
-  let resInspiracao;
-  let sucessoInspiracao = false;
-  let erroInspiracao: string | null = null;
-  try {
-    resInspiracao = await sendZapiText(destino, inspiracao);
-    sucessoInspiracao = resInspiracao.ok;
-    if (!resInspiracao.ok)
-      erroInspiracao = `status ${resInspiracao.status}`;
-  } catch (e) {
-    erroInspiracao = e instanceof Error ? e.message : String(e);
   }
 
   // Log no banco (status)
@@ -98,10 +78,5 @@ export async function GET(req: NextRequest) {
     semana,
     destino,
     status: { sucesso: sucessoStatus, erro: erroStatus, resultado: resStatus },
-    inspiracao: {
-      sucesso: sucessoInspiracao,
-      erro: erroInspiracao,
-      resultado: resInspiracao,
-    },
   });
 }
